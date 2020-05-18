@@ -19,7 +19,7 @@
         stage('Building image') {
             steps{
                // script {
-                  dockerImage = docker.build -t Dockerfile .
+                  dockerImage = docker build .
              //   }
              }
           }
