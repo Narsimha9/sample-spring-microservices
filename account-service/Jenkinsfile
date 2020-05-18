@@ -1,37 +1,39 @@
- //using hostname.
-
-//[code language="java"]
-node {
-
-    withMaven(maven:'maven') {
-
-        stage('Checkout') {
-            git url: 'https://github.com/saurabh0010/sample-spring-microservices.git', CredentialsID: 'github', branch: 'master'
-        }
-
-        stage('Build') {
-            sh 'mvn clean install'
-
-            def pom = readMavenPom file:'pom.xml'
-            print pom.version
-            env.version = pom.version
-        }
-
-        stage('Image') {
-            dir ('account-service') {
-                def app = docker.build "localhost:5000/account-service:${env.version}"
-                app.push()
+ pipeline{
+  environment {
+    registry = "simhalp9/micservices"
+    registryCredential = 'dockerhub'
+    dockerImage = ''
+  }
+  agent any
+    stages {
+        stage('clean') {
+            steps {
+                bat 'mvn clean'
             }
         }
-
-        stage ('Run') {
-            docker.image("localhost:5000/account-service:${env.version}").run('-p 2222:2222 -h account --name account --link discovery')
+        stage('build and test') {
+            steps {
+                bat 'mvn package'
+            }
         }
-
-        stage ('Final') {
-            build job: 'customer-service-pipeline', wait: false
-        }      
-
-    }
-
+        stage('Building image') {
+            steps{
+                script {
+                  dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                }
+             }
+          }
+          stage('Push Image') {
+              steps{
+                  script {
+                      docker.withRegistry( '', registryCredential ) {
+                        dockerImage.push()
+                      }
+                  }
+              }
+            }
+    
+      }
 }
+
+
