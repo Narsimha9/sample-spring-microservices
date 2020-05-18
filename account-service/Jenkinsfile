@@ -18,9 +18,9 @@
         }
         stage('Building image') {
             steps{
-                script {
-                  dockerImage = docker build -t Dockerfile .
-                }
+               // script {
+                  dockerImage = docker.build -t Dockerfile .
+             //   }
              }
           }
           stage('Push Image') {
